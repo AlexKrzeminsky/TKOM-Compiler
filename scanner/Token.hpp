@@ -3,6 +3,7 @@
 
 #include <string>
 #include <boost/variant.hpp>
+#include "TokenType.hpp"
 
 namespace scanner
 {
@@ -10,28 +11,20 @@ namespace scanner
 class Token
 {
 public:
-    enum class Type
-    {
-        Eof,
-        Integer,
-        String,
-    };
-
-
     Token();
     Token(int);
     Token(std::string);
 
-    Type getType() const { return type; }
+    TokenType::Type getType() const { return type; }
     int getInteger() const { return boost::get<int>(val); }
     std::string getString() const { return boost::get<std::string>(val); }
     std::string toString() const;
 
-    static std::string toString(Token::Type);
+    static std::string toString(TokenType::Type);
     std::string valToString() const;
 
 private:
-    Type type;
+    TokenType::Type type;
 
     boost::variant<
         int,
@@ -39,7 +32,7 @@ private:
     > val;
 };
 
-inline std::ostream& operator<<(std::ostream& o, Token::Type type) {
+inline std::ostream& operator<<(std::ostream& o, TokenType::Type type) {
     return o << Token::toString(type);
 }
 

@@ -9,6 +9,7 @@ namespace scanner
 
 class TokenType
 {
+public:
     // K_ - Keyword
     // T_ - Token
     // I_ - Identifier
@@ -58,37 +59,38 @@ class TokenType
     Type stringToType(std::string);
 
 private:
+    // map without Identifiers and Literals
     std::map<std::string, Type> stringTokenMap = {
-        {"fun",         K_Fun},          
-        {"return",      K_Return},       
-        {"break",       K_Break},        
-        {"continue",    K_Continue},     
-        {"if",          K_If},           
-        {"else",        K_Else},         
-        {"while",       K_While},        
-        {"var",         K_Var},          
-        {"{",           T_OpenBrace},    
-        {"}",           T_CloseBrace},   
-        {"(",           T_OpenParen},    
-        {")",           T_CloseParen},   
-        {"[",           T_OpenBracket},  
-        {"]",           T_CloseBracket}, 
-        {";",           T_Semicolon},    
-        {".",           T_Dot},          
-        {",",           T_Comma},        
-        {"=",           T_Equal},        
-        {"==",          T_Equal2},       
-        {"!=",          T_NotEqual},     
-        {"<",           T_LessThan},     
-        {">",           T_GreaterThan},  
-        {"<=",          T_LeEqThan},     
-        {">=",          T_GrEqThan},     
-        {"+",           T_Plus},         
-        {"-",           T_Minus},        
-        {"*",           T_Asterisk},     
-        {"/",           T_Slash},        
-        {"||",          T_Bar2},         
-        {"&&",          T_Ampersand2},
+        {"fun",         Type::K_Fun},          
+        {"return",      Type::K_Return},       
+        {"break",       Type::K_Break},        
+        {"continue",    Type::K_Continue},     
+        {"if",          Type::K_If},           
+        {"else",        Type::K_Else},         
+        {"while",       Type::K_While},        
+        {"var",         Type::K_Var},          
+        {"{",           Type::T_OpenBrace},    
+        {"}",           Type::T_CloseBrace},   
+        {"(",           Type::T_OpenParen},    
+        {")",           Type::T_CloseParen},   
+        {"[",           Type::T_OpenBracket},  
+        {"]",           Type::T_CloseBracket}, 
+        {";",           Type::T_Semicolon},    
+        {".",           Type::T_Dot},          
+        {",",           Type::T_Comma},        
+        {"=",           Type::T_Equal},        
+        {"==",          Type::T_Equal2},       
+        {"!=",          Type::T_NotEqual},     
+        {"<",           Type::T_LessThan},     
+        {">",           Type::T_GreaterThan},  
+        {"<=",          Type::T_LeEqThan},     
+        {">=",          Type::T_GrEqThan},     
+        {"+",           Type::T_Plus},         
+        {"-",           Type::T_Minus},        
+        {"*",           Type::T_Asterisk},     
+        {"/",           Type::T_Slash},        
+        {"||",          Type::T_Bar2},         
+        {"&&",          Type::T_Ampersand2},
     };
 
     std::map<Type, std::string> reverseMap(std::map<std::string, Type>);
