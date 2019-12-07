@@ -19,15 +19,15 @@ public:
 
 
     Token();
-    Token(int value);
-    Token(std::string str);
+    Token(int);
+    Token(std::string);
 
     Type getType() const { return type; }
     int getInteger() const { return boost::get<int>(val); }
     std::string getString() const { return boost::get<std::string>(val); }
     std::string toString() const;
 
-    static std::string toString(Token::Type type);
+    static std::string toString(Token::Type);
     std::string valToString() const;
 
 private:
