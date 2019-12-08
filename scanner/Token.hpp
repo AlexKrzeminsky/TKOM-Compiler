@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/variant.hpp>
 #include "TokenType.hpp"
+#include "TokenTypeWrapper.hpp"
 
 namespace scanner
 {
@@ -14,6 +15,7 @@ public:
     Token();
     Token(int);
     Token(std::string);
+    Token(TokenType);
 
     TokenType getType() const { return type; }
     int getInteger() const { return boost::get<int>(val); }
@@ -25,6 +27,7 @@ public:
 
 private:
     TokenType type;
+    static TokenTypeWrapper TTW;
 
     boost::variant<
         int,

@@ -23,6 +23,7 @@ enum class TokenType {
     T_CloseParen,   // )
     T_OpenBracket,  // [
     T_CloseBracket, // ]
+    T_Colon,        // :
     T_Semicolon,    // ;
     T_Dot,          // .
     T_Comma,        // ,
@@ -33,6 +34,7 @@ enum class TokenType {
     T_GreaterThan,  // >
     T_LeEqThan,     // <=
     T_GrEqThan,     // >=
+    T_Exclamation,  // !
     T_Plus,         // +
     T_Minus,        // -
     T_Asterisk,     // *
@@ -43,6 +45,7 @@ enum class TokenType {
     I_Identifier,   // identifier
     L_String,       // string literal
     L_Numeric,      // numeric literal
+    UNDEFINED,      // undefined token
 };
 
 }

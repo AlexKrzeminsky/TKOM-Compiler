@@ -3,17 +3,11 @@
 
 #include <map>
 #include <string>
-//#include <boost/thread/mutex.hpp>
+#include <iterator>
 #include "TokenType.hpp"
 
 namespace scanner 
 {
-
-/*struct Lock {
-    Lock(boost::mutex& m) : m_(m) { m_.lock(); }
-    ~Lock() { m_.unlock(); }
-    boost::mutex& m_;
-};*/
 
 class TokenTypeWrapper
 {
@@ -21,7 +15,8 @@ public:
     static TokenTypeWrapper& getInstance();
 
     static std::string typeToString(TokenType);
-    static TokenType stringToType(std::string);
+    static std::string typeToRepr(TokenType);
+    static TokenType reprToType(std::string);
 
 private:
     TokenTypeWrapper() {}
@@ -30,7 +25,7 @@ private:
 
     typedef std::map<TokenType, std::string> TSMap_;
     typedef std::map<std::string, TokenType> STMap_;
-    
+
     static TSMap_ reverseMap(STMap_ stmap) {
         TSMap_ result;
 
@@ -42,8 +37,9 @@ private:
     };
 
     // maps without Identifiers and Literals for string <-> token conversion
-    static STMap_ stringTokenMap;
+    static STMap_ reprTokenMap;
     static TSMap_ tokenStringMap;
+    static TSMap_ tokenReprMap;
     static TokenTypeWrapper* instance_;
 };
 

@@ -1,0 +1,14 @@
+fun main() {
+    var int = 1;
+    var float = 0.1;
+    var string = "test";
+    if ( int > float ) {
+        string = "aaaa";
+        while(int <= 3) {
+            print(string[int]);
+        }
+        if(int == 2) continue;
+        if(int == 4) break;
+    }
+    return float;
+}

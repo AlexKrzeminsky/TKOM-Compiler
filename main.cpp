@@ -1,26 +1,28 @@
 #include "scanner/Token.hpp"
 #include "scanner/TokenType.hpp"
 #include "scanner/TokenTypeWrapper.hpp"
+#include "scanner/Scanner.hpp"
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace scanner;
 
 int main() {
     typedef TokenTypeWrapper TTW;
-    Token token1;
-    Token token2(12);
-    Token token3("abc");
     TTW::getInstance();
+    std::vector<Token> tokens;
+    Token token;
+    Scanner scanner("test.txt");
+    while(true) {
+        token = scanner.scan();
+        tokens.push_back(token);
+        if (token.getType() == TokenType::T_EOF) break;
+    }
 
-    std::cout << token1.toString() << token1.valToString() << std::endl;
-    std::cout << token2.toString() << token2.valToString() << std::endl;
-    std::cout << token3.toString() << token3.valToString() << std::endl;
-
-    //std::cout << TokenTypeWrapper::typeToString(token1.getType());
-    std::string test = TTW::typeToString(TTW::stringToType(">="));
-
-    std::cout << test;
+    for (auto &i: tokens) {
+        std::cout << i.toString() << std::endl;
+    }
 
     return 0;
 }

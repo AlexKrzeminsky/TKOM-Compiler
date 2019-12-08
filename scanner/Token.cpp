@@ -2,31 +2,26 @@
 
 using namespace scanner;
 
-Token::Token() : type(TokenType::T_EOF) {}
+Token::Token() : type(TokenType::T_EOF) { TokenTypeWrapper::getInstance(); }
 
 Token::Token(int value) : type(TokenType::L_Numeric) {
     val = value;
+    TokenTypeWrapper::getInstance();
 }
 
 Token::Token(std::string string) : type(TokenType::L_String) {
     val = string;
+    TokenTypeWrapper::getInstance();
 }
+
+Token::Token(TokenType ttype) : type(ttype) { TokenTypeWrapper::getInstance(); }
 
 std::string Token::toString() const {
     return toString(type);
 }
 
 std::string Token::toString(TokenType type) {
-    switch (type)
-    {
-    case TokenType::T_EOF:
-        return "EOF";
-    case TokenType::L_Numeric:
-        return "int";
-    case TokenType::L_String:
-        return "string";
-    }
-    return "unknown";
+    return TTW.typeToString(type);
 }
 
 std::string Token::valToString() const {
@@ -36,6 +31,8 @@ std::string Token::valToString() const {
         return std::to_string(boost::get<int>(val));
     case TokenType::L_String:
         return boost::get<std::string>(val);
+    default:
+        return std::string();
     }
     return std::string();
 }
