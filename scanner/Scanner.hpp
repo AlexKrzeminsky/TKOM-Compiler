@@ -6,6 +6,7 @@
 #include <string>
 #include <limits>
 #include <boost/variant.hpp>
+#include <boost/log/trivial.hpp>
 #include "Token.hpp"
 #include "TokenType.hpp"
 #include "TokenCheck.hpp"
@@ -17,25 +18,30 @@ class Scanner {
 public:
     Scanner(std::string);
     bool scanNumber();
-    void scanString();
-    void scanIdentifier();
+    bool scanString();
+    bool scanIdentifier();
+    void nextLine();
     Token scan();
     TokenType getKeywordOrIdentifier();
     std::string tokenValue;
 
+    bool fail;
+
 private: 
     std::ifstream text;
     inline void move() {
+        pos++;
         tokenValue += text.get();
     }
     static TokenTypeWrapper TTW;
 
-    int start;
+    int callPos;
+    int callLine;
     int pos;
-    int end;
+    int line;
 
-    TokenType token;
-    int tokenPos;
+    bool isFloat();
+    bool isClear();
 };
 }
 

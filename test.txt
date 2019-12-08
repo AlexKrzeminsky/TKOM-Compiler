@@ -1,9 +1,9 @@
 fun main() {
     var int = 1;
     var float = 0.1;
-    var string = "test";
+    var string = "var";
     if ( int > float ) {
-        string = "aaaa";
+        string = "fun";
         while(int <= 3) {
             print(string[int]);
         }

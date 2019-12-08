@@ -14,6 +14,7 @@ class Token
 public:
     Token();
     Token(int);
+    Token(float);
     Token(std::string);
     Token(TokenType);
 
@@ -29,8 +30,11 @@ private:
     TokenType type;
     static TokenTypeWrapper TTW;
 
+    bool isFloat;
+
     boost::variant<
         int,
+        float,
         std::string
     > val;
 };
