@@ -43,6 +43,6 @@ inline std::ostream& operator<<(std::ostream& o, TokenType type) {
     return o << Token::toString(type);
 }
 
-};
+}
 
 #endif

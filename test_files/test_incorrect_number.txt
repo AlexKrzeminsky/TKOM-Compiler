@@ -1,0 +1,2 @@
+var incorrect = 1a.1;
+var correct = 1.1;

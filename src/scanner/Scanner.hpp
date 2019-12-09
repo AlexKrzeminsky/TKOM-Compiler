@@ -41,7 +41,8 @@ private:
     int line;
 
     bool isFloat();
-    bool isClear();
+    bool isClearNumber();
+    bool isClearIdentifier();
 };
 }
 

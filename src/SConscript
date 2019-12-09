@@ -1,0 +1,11 @@
+Import('env')
+
+scanner_lib = env.SConscript('scanner/SConscript')
+
+p = env.Program('scr',
+                source=['main.cpp'],
+                LIBS=['pthread', 'boost_log', scanner_lib],
+                )
+
+
+Return('p')

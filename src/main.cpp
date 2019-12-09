@@ -3,7 +3,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <boost/log/trivial.hpp>
 #include "scanner/Token.hpp"
 #include "scanner/TokenType.hpp"
 #include "scanner/TokenTypeWrapper.hpp"

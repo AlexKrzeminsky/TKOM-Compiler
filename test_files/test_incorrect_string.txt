@@ -1,0 +1,2 @@
+var incorrect = "testetestestes;
+var correct = "testestes";

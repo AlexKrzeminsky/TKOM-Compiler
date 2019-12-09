@@ -21,16 +21,27 @@ bool Scanner::isFloat() {
     return (tokenValue.find('.') != std::string::npos);
 }
 
-bool Scanner::isClear() {
+bool Scanner::isClearNumber() {
     char tmp = text.peek();
     return (isWhitespace(tmp) ||
-            (tmp >= '!' && tmp <= '/') ||
-            (tmp >= ':' && tmp <= '>') ||
-            tmp == '{' ||
-            tmp == '}' ||
-            tmp == '[' ||
-            tmp == ']'
-            );
+            tmp == '+'  ||
+            tmp == '-'  ||
+            tmp == '/'  ||
+            tmp == '*'  ||
+            tmp == ';'  ||
+            tmp == '('  ||
+            tmp == ')'  ||
+            tmp == '&'  ||
+            tmp == '|'  ||
+            tmp == '!'  ||
+            tmp == ']'  ||
+            (tmp >= '<' && tmp <= '>'));
+}
+
+bool Scanner::isClearIdentifier() {
+    char tmp = text.peek();
+    return (isClearNumber() ||
+            tmp == '[');
 }
 
 bool Scanner::scanNumber() {
@@ -40,8 +51,8 @@ bool Scanner::scanNumber() {
         move();
         while (isDigit(text.peek())) move();
     }
-    if (!isClear()) {
-        while (!isClear()) move();
+    if (!isClearNumber()) {
+        while (!isLineBreak(text.peek())) move();
         BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
             + " - Incorrectly defined literal'" + tokenValue + "'\n";
         clearNumber = false;
@@ -75,8 +86,8 @@ bool Scanner::scanString() {
 bool Scanner::scanIdentifier() {
     bool clearIdentifier = true;
     while (isIdentifierPart(text.peek())) move();
-    if (!isClear()) {
-        while (!isClear()) move();
+    if (!isClearIdentifier()) {
+        while (!isLineBreak(text.peek())) move();
         BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
             + " - Incorrectly defined identifier'" + tokenValue + "'\n";
         clearIdentifier = false;
@@ -91,7 +102,7 @@ void Scanner::nextLine() {
 }
 
 TokenType Scanner::getKeywordOrIdentifier() {
-    TokenType token;
+    TokenType token = TokenType::UNDEFINED;
     if (tokenValue[0] >= 'a' && tokenValue[0] <= 'z') {
         token = TTW.reprToType(tokenValue);
     }
@@ -132,11 +143,13 @@ Token Scanner::scan() {
                     move();
                     return Token(TokenType::T_Ampersand2);
                 }
+                return Token(TokenType::UNDEFINED);
             case '|':
                 if (text.peek() == '|') {
                     move();
                     return Token(TokenType::T_Bar2);
                 }
+                return Token(TokenType::UNDEFINED);
             case '(':
             case ')':
             case '[':
