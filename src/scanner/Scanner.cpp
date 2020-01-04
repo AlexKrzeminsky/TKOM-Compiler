@@ -17,33 +17,6 @@ Scanner::Scanner(std::string path) {
     TokenTypeWrapper::getInstance();
 }
 
-bool Scanner::isFloat() {
-    return (tokenValue.find('.') != std::string::npos);
-}
-
-bool Scanner::isClearNumber() {
-    char tmp = text.peek();
-    return (isWhitespace(tmp) ||
-            tmp == '+'  ||
-            tmp == '-'  ||
-            tmp == '/'  ||
-            tmp == '*'  ||
-            tmp == ';'  ||
-            tmp == '('  ||
-            tmp == ')'  ||
-            tmp == '&'  ||
-            tmp == '|'  ||
-            tmp == '!'  ||
-            tmp == ']'  ||
-            (tmp >= '<' && tmp <= '>'));
-}
-
-bool Scanner::isClearIdentifier() {
-    char tmp = text.peek();
-    return (isClearNumber() ||
-            tmp == '[');
-}
-
 bool Scanner::scanNumber() {
     bool clearNumber = true;
     while (isDigit(text.peek())) move();
@@ -51,8 +24,8 @@ bool Scanner::scanNumber() {
         move();
         while (isDigit(text.peek())) move();
     }
-    if (!isClearNumber()) {
-        while (!isLineBreak(text.peek())) move();
+    if (!isClearNumber(text.peek())) {
+        while (!isLineBreak(text.peek()) && !text.eof()) move();
         BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
             + " - Incorrectly defined literal'" + tokenValue + "'\n";
         clearNumber = false;
@@ -86,8 +59,8 @@ bool Scanner::scanString() {
 bool Scanner::scanIdentifier() {
     bool clearIdentifier = true;
     while (isIdentifierPart(text.peek())) move();
-    if (!isClearIdentifier()) {
-        while (!isLineBreak(text.peek())) move();
+    if (!isClearIdentifier(text.peek())) {
+        while (!isLineBreak(text.peek()) && !text.eof()) move();
         BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
             + " - Incorrectly defined identifier'" + tokenValue + "'\n";
         clearIdentifier = false;
@@ -201,12 +174,12 @@ Token Scanner::scan() {
             case '9':
                 if(!scanNumber()) return Token(TokenType::UNDEFINED);
 
-                if(isFloat()) return Token(std::stof(tokenValue));
+                if(isFloat(tokenValue)) return Token(std::stof(tokenValue));
                 else return Token(std::stoi(tokenValue));
             default:
                 if (isIdentifierStart(ch)) {
                     if (!scanIdentifier()) return Token(TokenType::UNDEFINED);
-                    return Token(getKeywordOrIdentifier());                    
+                    return Token(getKeywordOrIdentifier(), tokenValue);                    
                 }
                 BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(pos)
                     + " - Unknown Token: '" + tokenValue + "'\n";

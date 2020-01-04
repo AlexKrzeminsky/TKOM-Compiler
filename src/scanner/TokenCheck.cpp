@@ -25,3 +25,29 @@ bool isIdentifierPart(const char& ch) {
            (ch >= 'A' && ch <= 'Z') ||
            ch == '_';
 }
+
+bool isClearNumber(const char& ch) {
+    return (isWhitespace(ch) ||
+            ch == '+'  ||
+            ch == '-'  ||
+            ch == '/'  ||
+            ch == '*'  ||
+            ch == ';'  ||
+            ch == '('  ||
+            ch == ')'  ||
+            ch == '&'  ||
+            ch == '|'  ||
+            ch == '!'  ||
+            ch == ']'  ||
+            ch == '='  ||
+            (ch >= '<' && ch <= '>'));
+}
+
+bool isClearIdentifier(const char& ch) {
+    return (isClearNumber(ch) ||
+            ch == '[');
+}
+
+bool isFloat(const std::string& tokenV) {
+    return (tokenV.find('.') != std::string::npos);
+}

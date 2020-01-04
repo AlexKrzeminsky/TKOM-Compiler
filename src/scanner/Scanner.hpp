@@ -39,10 +39,6 @@ private:
     int callLine;
     int pos;
     int line;
-
-    bool isFloat();
-    bool isClearNumber();
-    bool isClearIdentifier();
 };
 }
 

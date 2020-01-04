@@ -26,6 +26,11 @@ Token::Token(std::string string) : type(TokenType::L_String) {
 
 Token::Token(TokenType ttype) : type(ttype) { TokenTypeWrapper::getInstance(); }
 
+Token::Token(TokenType ttype, std::string value) {
+    type = ttype;
+    val = value;
+}
+
 std::string Token::toString() const {
     return toString(type);
 }
@@ -41,6 +46,7 @@ std::string Token::valToString() const {
         if (isFloat) return std::to_string(boost::get<float>(val));
         return std::to_string(boost::get<int>(val));
     case TokenType::L_String:
+    case TokenType::I_Identifier:
         return boost::get<std::string>(val);
     default:
         return std::string();

@@ -17,6 +17,7 @@ public:
     Token(float);
     Token(std::string);
     Token(TokenType);
+    Token(TokenType, std::string);
 
     TokenType getType() const { return type; }
     int getInteger() const { return boost::get<int>(val); }
