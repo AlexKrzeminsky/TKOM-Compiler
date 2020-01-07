@@ -5,40 +5,61 @@
 #include <fstream>
 #include <string>
 #include <limits>
+#include <vector>
+#include <stdexcept>
 #include <boost/variant.hpp>
 #include <boost/log/trivial.hpp>
 #include "Token.hpp"
 #include "TokenType.hpp"
 #include "TokenCheck.hpp"
 #include "TokenTypeWrapper.hpp"
+#include "../reader/Reader.hpp"
 
 namespace scanner
 {
 class Scanner {
 public:
-    Scanner(std::string);
+    Scanner(std::istream &istream);
+    ~Scanner() { delete text; }
     bool scanNumber();
     bool scanString();
     bool scanIdentifier();
+    void skipWhitespaces();
+    void moveWhitespace();
     void nextLine();
+    Token checkTwoCharToken(const char&, TokenType, TokenType);
     Token scan();
+    const Token getToken() const { return token; }
+
+    std::vector<Token> getTokens() {
+        if (!scanFail) return tokens;
+        else return std::vector<Token>();
+    }
+    
     TokenType getKeywordOrIdentifier();
     std::string tokenValue;
 
     bool fail;
 
+    bool scanFail;
+
 private: 
-    std::ifstream text;
     inline void move() {
         pos++;
-        tokenValue += text.get();
+        ch = text->peek();
+        tokenValue += text->get();
     }
-    static TokenTypeWrapper TTW;
+
+    Reader* text;
 
     int callPos;
     int callLine;
     int pos;
     int line;
+    char ch;
+
+    Token token;
+    std::vector<Token> tokens;
 };
 }
 

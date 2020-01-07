@@ -3,29 +3,24 @@
 
 using namespace scanner;
 
-Scanner::Scanner(std::string path) {
-    fail = false;
-    text = std::ifstream(path);
-
-    if ( text.fail() ) {
-        fail = true;
-    } 
-
+Scanner::Scanner(std::istream &istream)
+        {
+    text = new Reader(istream);
     pos = 0;
     line = 1;
 
-    TokenTypeWrapper::getInstance();
+    //TokenTypeWrapper::getInstance();
 }
 
 bool Scanner::scanNumber() {
     bool clearNumber = true;
-    while (isDigit(text.peek())) move();
-    if (text.peek() == '.') {
+    while (isDigit(text->peek())) move();
+    if (text->peek() == '.') {
         move();
-        while (isDigit(text.peek())) move();
+        while (isDigit(text->peek())) move();
     }
-    if (!isClearNumber(text.peek())) {
-        while (!isLineBreak(text.peek()) && !text.eof()) move();
+    if (!isClearNumber(text->peek())) {
+        while (!isLineBreak(text->peek()) && !text->eof()) move();
         BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
             + " - Incorrectly defined literal'" + tokenValue + "'\n";
         clearNumber = false;
@@ -36,154 +31,168 @@ bool Scanner::scanNumber() {
 bool Scanner::scanString() {
     bool closed = false;
     while (true) {
-        if (text.eof()) break;
-        if (text.peek() == '"'){
+        if (text->eof()) break;
+        if (text->peek() == '"'){
             move();
             closed = true;
             break;
         }
-        if (isLineBreak(text.peek())) {
+        if (isLineBreak(text->peek())) {
             nextLine();
             break;
         }
         move();
-    }
-    if (!closed) {
-        BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
-            + " - Incorrectly defined string: '" + tokenValue + "'\n";
-        tokenValue = std::string(); 
     }
     return closed;
 }
 
 bool Scanner::scanIdentifier() {
     bool clearIdentifier = true;
-    while (isIdentifierPart(text.peek())) move();
-    if (!isClearIdentifier(text.peek())) {
-        while (!isLineBreak(text.peek()) && !text.eof()) move();
-        BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
-            + " - Incorrectly defined identifier'" + tokenValue + "'\n";
+    while (isIdentifierPart(text->peek())) move();
+    if (!isClearIdentifier(text->peek())) {
+        while (!isLineBreak(text->peek()) && !text->eof()) move();
         clearIdentifier = false;
     }
     return clearIdentifier;
 }
 
-void Scanner::nextLine() {
-    line += 1;
-    pos = 0;
+void Scanner::skipWhitespaces() {
+    bool isWhitespaceCond = true;
 
-}
-
-TokenType Scanner::getKeywordOrIdentifier() {
-    TokenType token = TokenType::UNDEFINED;
-    if (tokenValue[0] >= 'a' && tokenValue[0] <= 'z') {
-        token = TTW.reprToType(tokenValue);
-    }
-    if(token == TokenType::UNDEFINED)
-        token = TokenType::I_Identifier;
-
-    return token;
-}
-
-Token Scanner::scan() {
-    tokenValue = std::string();
-    while (true) {
-        char ch = text.peek();
-
-        move();
-        callPos = pos;
-        callLine = line;
-
-        if (text.eof()) return Token(TokenType::T_EOF);
-
+    while (isWhitespaceCond) {
         if (isLineBreak(ch)) {
-            tokenValue = std::string();
+            moveWhitespace();
             nextLine();
             continue;
         }
-
         if (isWhitespace(ch)) {
-            tokenValue = std::string();
+            moveWhitespace();
             continue;
         }
-
-        switch (ch) {
-            case '"':
-                if (!scanString()) return Token(TokenType::UNDEFINED);
-                return Token(tokenValue);
-            case '&':
-                if (text.peek() == '&') {
-                    move();
-                    return Token(TokenType::T_Ampersand2);
-                }
-                return Token(TokenType::UNDEFINED);
-            case '|':
-                if (text.peek() == '|') {
-                    move();
-                    return Token(TokenType::T_Bar2);
-                }
-                return Token(TokenType::UNDEFINED);
-            case '(':
-            case ')':
-            case '[':
-            case ']':
-            case '{':
-            case '}':
-            case ';':
-            case ':':
-            case '.':
-            case ',':
-            case '+':
-            case '-':
-            case '*':
-            case '/':
-                return Token(TTW.reprToType(tokenValue));
-            case '=':
-                if (text.peek() == '=') {
-                    move();
-                    return Token(TokenType::T_Equal2);
-                }
-                return Token(TokenType::T_Equal);
-            case '>':
-                if (text.peek() == '=') {
-                    move();
-                    return Token(TokenType::T_GrEqThan);
-                }
-                return Token(TokenType::T_GreaterThan);
-            case '<':
-                if (text.peek() == '=') {
-                    move();
-                    return Token(TokenType::T_GrEqThan);
-                }
-                return Token(TokenType::T_GreaterThan);
-            case '!':
-                if (text.peek() == '=') {
-                    move();
-                    return Token(TokenType::T_GrEqThan);
-                }
-                return Token(TokenType::T_Exclamation);
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                if(!scanNumber()) return Token(TokenType::UNDEFINED);
-
-                if(isFloat(tokenValue)) return Token(std::stof(tokenValue));
-                else return Token(std::stoi(tokenValue));
-            default:
-                if (isIdentifierStart(ch)) {
-                    if (!scanIdentifier()) return Token(TokenType::UNDEFINED);
-                    return Token(getKeywordOrIdentifier(), tokenValue);                    
-                }
-                BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(pos)
-                    + " - Unknown Token: '" + tokenValue + "'\n";
-                return Token(TokenType::UNDEFINED);
-        }
+        isWhitespaceCond = false;
     }
+}
+
+
+void Scanner::moveWhitespace() {
+    tokenValue = std::string();
+    move();
+}
+
+void Scanner::nextLine() {
+    line += 1;
+    pos = 0;
+}
+
+TokenType Scanner::getKeywordOrIdentifier() {
+    TokenType tokenType = TokenType::UNDEFINED;
+    if (tokenValue[0] >= 'a' && tokenValue[0] <= 'z') {
+        tokenType = TokenTypeWrapper::reprToType(tokenValue);
+    }
+    if(tokenType == TokenType::UNDEFINED)
+        tokenType = TokenType::I_Identifier;
+
+    return tokenType;
+}
+
+Token Scanner::checkTwoCharToken(const char& expected, TokenType twoCharType, TokenType oneCharType) {
+    if (text->peek() == expected) {
+        move();
+        return Token(twoCharType);
+    }
+    return Token(oneCharType);
+}
+
+Token Scanner::scan() {
+    Token tk;
+    tokenValue = std::string();
+    move();
+
+    callPos = pos;
+    callLine = line;
+
+    skipWhitespaces();
+
+    if (text->eof()) {
+        token = Token(TokenType::T_EOF);
+        return token;
+    }
+
+    switch (ch) {
+        case '"':
+            if (!scanString()) { 
+                tk = Token(TokenType::UNDEFINED);
+                break;
+            }
+            tk = Token(tokenValue);
+            break;
+        case '&':
+            tk = checkTwoCharToken('&', TokenType::T_Ampersand2, TokenType::UNDEFINED);
+            break;
+        case '|':
+            tk = checkTwoCharToken('|', TokenType::T_Bar2, TokenType::UNDEFINED);
+            break;
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case ';':
+        case ':':
+        case '.':
+        case ',':
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+            tk = Token(TokenTypeWrapper::reprToType(tokenValue));
+            break;
+        case '=':
+            tk = checkTwoCharToken('=', TokenType::T_Equal2, TokenType::T_Equal);
+            break;
+        case '>':
+            tk = checkTwoCharToken('=', TokenType::T_GrEqThan, TokenType::T_GreaterThan);
+            break;
+        case '<':
+            tk = checkTwoCharToken('=', TokenType::T_LeEqThan, TokenType::T_LessThan);
+            break;
+        case '!':
+            tk = checkTwoCharToken('=', TokenType::T_NotEqual, TokenType::T_Exclamation);
+            break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            if(!scanNumber()) tk = Token(TokenType::UNDEFINED);
+            else {
+                if(isFloat(tokenValue)) tk = Token(std::stof(tokenValue));
+                else tk = Token(std::stoi(tokenValue));
+            }
+            break;
+
+        default:
+            if (isIdentifierStart(ch)) {
+                if (!scanIdentifier()) { 
+                    tk = Token(TokenType::UNDEFINED); 
+                    break; 
+                }
+                tk = Token(getKeywordOrIdentifier(), tokenValue); 
+                break;             
+            }
+            tk = Token(TokenType::UNDEFINED);
+    }
+    if (tk.getType() == TokenType::UNDEFINED) 
+                    throw std::runtime_error(
+                    std::to_string(line) + ":" + std::to_string(pos)
+                    + " - Unknown Token: '" + tokenValue + "'\n");
+    else { tokens.push_back(tk); token = tk; }
+    std::cout << TokenTypeWrapper::typeToString(tk.getType()) << std::endl;
+    return tk;
 }

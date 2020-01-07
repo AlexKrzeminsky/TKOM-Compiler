@@ -8,7 +8,7 @@ def fill_env_flags(env):
     env['BOOST_INCLUDES'] = '/usr/include/boost'
     env['BOOST_LIBS'] = '/usr/include/boost/lib'
     env.Append(CCFLAGS=['-Wall', '-Wextra', '-Wpedantic', '-Werror'])
-    env.Append(CCFLAGS=['-std=c++14', '-BOOST_ALL_DYN_LINK', '-lboost_log', '-g'])
+    env.Append(CCFLAGS=['-std=c++17', '-BOOST_ALL_DYN_LINK', '-lboost_log', '-g'])
 
     env.Append(LIBS=['pthread', 'boost_log', 'boost_system', 'boost_coroutine'])
     env.Append(LINKFLAGS = ['-BOOST_ALL_DYN_LINK'])

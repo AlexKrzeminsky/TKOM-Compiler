@@ -1,7 +1,8 @@
 #include "TokenCheck.hpp"
+#include <cctype>
 
 bool isDigit(const char& ch) {
-    return (ch >= '0' && ch <= '9');
+    return std::isdigit(ch);
 }
 
 bool isLineBreak(const char& ch) {
@@ -16,19 +17,18 @@ bool isWhitespace(const char& ch) {
 }
 
 bool isIdentifierStart(const char& ch) {
-    return (ch >= 'a' && ch <= 'z') || 
-           (ch >= 'A' && ch <= 'Z');
+    return std::isalpha(ch);
 }
 
 bool isIdentifierPart(const char& ch) {
-    return (ch >= 'a' && ch <= 'z') ||
-           (ch >= 'A' && ch <= 'Z') ||
+    return isIdentifierStart(ch) ||
            ch == '_';
 }
 
 bool isClearNumber(const char& ch) {
     return (isWhitespace(ch) ||
             ch == '+'  ||
+            ch == ','  ||
             ch == '-'  ||
             ch == '/'  ||
             ch == '*'  ||

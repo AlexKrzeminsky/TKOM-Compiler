@@ -43,11 +43,11 @@ std::string Token::valToString() const {
     switch (type)
     {
     case TokenType::L_Numeric:
-        if (isFloat) return std::to_string(boost::get<float>(val));
-        return std::to_string(boost::get<int>(val));
+        if (isFloat) return std::to_string(std::get<float>(val));
+        return std::to_string(std::get<int>(val));
     case TokenType::L_String:
     case TokenType::I_Identifier:
-        return boost::get<std::string>(val);
+        return std::get<std::string>(val);
     default:
         return std::string();
     }

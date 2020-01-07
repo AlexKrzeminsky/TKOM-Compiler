@@ -2,7 +2,9 @@
 #define SCANNER_TOKEN_HPP_
 
 #include <string>
-#include <boost/variant.hpp>
+#include <vector>
+#include <variant>
+#include <iostream>
 #include "TokenType.hpp"
 #include "TokenTypeWrapper.hpp"
 
@@ -20,8 +22,9 @@ public:
     Token(TokenType, std::string);
 
     TokenType getType() const { return type; }
-    int getInteger() const { return boost::get<int>(val); }
-    std::string getString() const { return boost::get<std::string>(val); }
+    int getInteger() const { return std::get<int>(val); }
+    float getFloat() const { return std::get<float>(val); }
+    std::string getString() const { return std::get<std::string>(val); }
     std::string toString() const;
 
     static std::string toString(TokenType);
@@ -33,7 +36,7 @@ private:
 
     bool isFloat;
 
-    boost::variant<
+    std::variant<
         int,
         float,
         std::string

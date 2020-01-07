@@ -1,10 +1,12 @@
 Import('env')
 
 scanner_lib = env.SConscript('scanner/SConscript')
+parser_lib = env.SConscript('parser/SConscript')
+reader_lib = env.SConscript('reader/SConscript')
 
 p = env.Program('scr',
                 source=['main.cpp'],
-                LIBS=['pthread', 'boost_log', scanner_lib],
+                LIBS=['pthread', 'boost_log', scanner_lib, parser_lib, reader_lib],
                 )
 
 
