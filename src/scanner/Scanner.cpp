@@ -21,8 +21,6 @@ bool Scanner::scanNumber() {
     }
     if (!isClearNumber(text->peek())) {
         while (!isLineBreak(text->peek()) && !text->eof()) move();
-        BOOST_LOG_TRIVIAL(error) << std::to_string(line) + ":" + std::to_string(callPos)
-            + " - Incorrectly defined literal'" + tokenValue + "'\n";
         clearNumber = false;
     }
     return clearNumber;

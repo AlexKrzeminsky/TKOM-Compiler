@@ -1,2 +1,4 @@
-var incorrect = 1fef.1;
-var correct = 1.1;
+fun main() {
+    var incorrect = 1fef.1;
+    var correct = 1.1;
+}
