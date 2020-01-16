@@ -27,6 +27,7 @@ bool isIdentifierPart(const char& ch) {
 
 bool isClearNumber(const char& ch) {
     return (isWhitespace(ch) ||
+            ch == ':'  ||
             ch == '+'  ||
             ch == ','  ||
             ch == '-'  ||

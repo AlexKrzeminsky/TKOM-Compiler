@@ -1,5 +1,5 @@
 Import('env')
 
-lib = env.StaticLibrary('parser', Glob('*.cpp'))
+lib = env.StaticLibrary('parser', ['Parser.cpp', '../ast/Var.cpp', '../std/Std.cpp'])
 
 Return('lib')

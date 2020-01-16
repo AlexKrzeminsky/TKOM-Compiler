@@ -9,6 +9,7 @@
 #include "../ast/Var.hpp"
 #include "../ast/VarType.hpp"
 #include "../ast/Program.hpp"
+#include "../ast/Return.hpp"
 #include "../ast/statement/ReturnStatement.hpp"
 #include "../ast/statement/AssignStatement.hpp"
 #include "../ast/statement/IfStatement.hpp"
@@ -16,6 +17,8 @@
 #include "../ast/statement/FunctionCallStatement.hpp"
 #include "../ast/statement/FunctionDefStatement.hpp"
 #include "../ast/statement/BlockStatement.hpp"
+#include "../ast/statement/AppendStatement.hpp"
+#include "../ast/statement/LenStatement.hpp"
 #include "../ast/statement/Statement.hpp"
 #include "../ast/expression/Expression.hpp"
 #include "../ast/expression/OrExpr.hpp"
@@ -31,9 +34,10 @@ class Parser
 public:
 
     Parser() = default;
-    explicit Parser(Scanner* scr_) {scr = scr_;}
+    explicit Parser(std::unique_ptr<Scanner> scr_) : scr(std::move(scr_)) {}
 
-    void setScr(Scanner* scr_);
+    void setScr(std::unique_ptr<Scanner> scr_);
+    void clearScr();
 
     void parse() {
         scr->scan(); 
@@ -44,9 +48,11 @@ public:
         current = next;
         next = scr->scan();
     }
+    
+    Return run();
 
 private:
-    Scanner* scr;
+    std::unique_ptr<Scanner> scr;
     Program program;
     BlockStatement* block = nullptr;
     Token current;
@@ -60,10 +66,12 @@ private:
     std::unique_ptr<Statement> parseInitStatement();
     std::unique_ptr<Statement> parseAssignOrFunCall();
     std::unique_ptr<Statement> parseAssignStatement(Var &variable);
-    std::unique_ptr<Statement> parseFunCall();
+    std::unique_ptr<Statement> parseFunCall(std::string name);
     std::unique_ptr<Statement> parseReturnStatement();
     std::unique_ptr<Statement> parseIfStatement();
     std::unique_ptr<Statement> parseWhileStatement();
+    std::unique_ptr<Statement> parseAppendStatement();
+    std::unique_ptr<Statement> parseLenStatement();
     std::unique_ptr<Expression> parseOrExpr();
     std::unique_ptr<Expression> parseAndExpr();
     std::unique_ptr<Expression> parseRelExpr();

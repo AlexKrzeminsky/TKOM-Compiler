@@ -3,8 +3,8 @@
 
 #include "Statement.hpp"
 #include "../Var.hpp"
-#include <map>
-#include <vector>
+#include <unordered_map>
+#include <list>
 #include <stdexcept>
 
 namespace ast
@@ -32,10 +32,31 @@ public:
         else throw std::runtime_error("var not found");
     }
 
+    Return run() override {
+        Return ret;
+        std::list<Var> oldVariables;
+        for (auto &var : variables) {
+            oldVariables.push_back(var.second);
+        }
+
+        for (auto &&stmt : statements) {
+            ret = stmt->run();
+            if (ret.type != Return::None)
+                break;
+        }
+
+        for (auto &&var : variables) {
+            var.second = oldVariables.front();
+            oldVariables.pop_front();
+        }
+
+        return ret;
+    };
+
 private:
     BlockStatement* parent;
-    std::vector<stmtPtr> statements;
-    std::map<std::string, Var> variables;
+    std::list<stmtPtr> statements;
+    std::unordered_map<std::string, Var> variables;
 };
 
 }

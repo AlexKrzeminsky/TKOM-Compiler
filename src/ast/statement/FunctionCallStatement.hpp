@@ -1,7 +1,7 @@
 #ifndef PARSER_FUNCALLSTATEMENT_HPP_
 #define PARSER_FUNCALLSTATEMENT_HPP_
 
-#include <vector>
+#include <list>
 #include <memory>
 #include "Statement.hpp"
 #include "FunctionDefStatement.hpp"
@@ -21,9 +21,19 @@ public:
 
     unsigned size() { return expressions.size(); }
 
+    Return run() override {
+        std::list<Var> var;
+        for (auto &&expr : expressions) {
+            var.push_back(expr->calculate());
+        }
+        Return ret = functionDef.run(var);
+        ret.type = Return::None;
+        return ret;
+    }
+
 private:
     FunctionDefinition &functionDef;
-    std::vector<std::unique_ptr<Expression>> expressions;
+    std::list<std::unique_ptr<Expression>> expressions;
 };
 
 }

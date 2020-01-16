@@ -4,7 +4,7 @@
 #include "Expression.hpp"
 #include "../Var.hpp"
 #include "AndExpr.hpp"
-#include <vector>
+#include <list>
 
 namespace ast
 {
@@ -16,19 +16,27 @@ public:
         exprs.push_back(std::move(expr_));
     }
 
+    OrExpr(OrExpr &&rval)
+        : exprs(std::move(rval.exprs)) {}
+
     void addOr(exprPtr expr) {
         exprs.push_back(std::move(expr));
     }
 
-    void print() {
-        std::cout << "\nOrExpr:\n";
-        for (unsigned int i = 0; i < exprs.size(); i++) {
-            exprs[i]->print();
+    virtual Var calculate() const {
+        Var var = exprs.begin()->get()->calculate();
+
+        for(auto it = ++exprs.begin(); it!=exprs.end(); ++it) {
+            var = var || it->get()->calculate();
+            if (var)
+                break;
         }
+
+        return var;
     }
 
 private:
-    std::vector<exprPtr> exprs;
+    std::list<exprPtr> exprs;
 };
 
 }

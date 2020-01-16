@@ -9,8 +9,12 @@ using namespace ast;
 const bool THROW = true;
 const bool NOTHROW = false;
 
-void Parser::setScr(Scanner* scr_) {
-    scr = scr_;
+void Parser::setScr(std::unique_ptr<Scanner> scr_) {
+    scr = std::move(scr_);
+}
+
+void Parser::clearScr() {
+    scr.reset(nullptr);
 }
 
 bool Parser::accept(const TokenType type, bool doThrow) {
@@ -18,16 +22,14 @@ bool Parser::accept(const TokenType type, bool doThrow) {
         move();
         return true;
     }
-    return doThrow ? throw std::runtime_error("Wrong token") : false;
+    return doThrow ? throw std::runtime_error("Wrong token" + std::to_string(scr->callPos) 
+                        + " : " + std::to_string(scr->callLine) + scr->tokenValue) : false;
 }
 
 void Parser::parseProgram() {
     while (scr->getToken().getType() != TokenType::T_EOF) {
         if (accept(TokenType::K_Fun, NOTHROW)) {
             parseFunction();
-        }
-        if (accept(TokenType::T_EOF, THROW)) {
-            return;
         }
     }
 }
@@ -47,6 +49,7 @@ void Parser::parseFunction() {
 
 void Parser::parseArgs(FunctionDefinition &fun) {
     if (accept(TokenType::I_Identifier, NOTHROW)) {
+        fun.addParam(current.getString());
         while (accept(TokenType::T_Comma, NOTHROW)) {
             accept(TokenType::I_Identifier, THROW);
             fun.addParam(current.getString());
@@ -75,6 +78,14 @@ void Parser::parseStmtBlock(BlockStatement &newBlock) {
                 block->addStatement(std::move(parseInitStatement())); break;
             case TokenType::K_Return:
                 block->addStatement(std::move(parseReturnStatement())); break;
+            case TokenType::K_Continue:
+                block->addStatement(std::move(std::make_unique<ReturnStatement>(Return::Continue))); 
+                accept(TokenType::T_Semicolon, THROW); break;
+            case TokenType::K_Break:
+                block->addStatement(std::move(std::make_unique<ReturnStatement>(Return::Break))); 
+                accept(TokenType::T_Semicolon, THROW); break;
+            case TokenType::K_Append:
+                block->addStatement(std::move(parseAppendStatement())); break;
             case TokenType::T_OpenBrace:
                 newNewBlock = std::move(std::make_unique<BlockStatement>(block));
                 parseStmtBlock(*newNewBlock);
@@ -83,7 +94,6 @@ void Parser::parseStmtBlock(BlockStatement &newBlock) {
             default:
                 throw std::runtime_error("Block parse invalid");
         }
-        
     }
 
     block = const_cast<BlockStatement *>(newBlock.getParent());
@@ -112,9 +122,10 @@ std::unique_ptr<Statement> Parser::parseInitStatement() {
 
 std::unique_ptr<Statement> Parser::parseAssignOrFunCall() {
     std::unique_ptr<Statement> statement;
+    Token tk = current;
 
     if (accept(TokenType::T_OpenParen, NOTHROW)) {
-        statement = std::move(parseFunCall());
+        statement = std::move(parseFunCall(tk.getString()));
         accept(TokenType::T_Semicolon, THROW);
     } else {
         existVariable();
@@ -124,27 +135,40 @@ std::unique_ptr<Statement> Parser::parseAssignOrFunCall() {
 }
 
 std::unique_ptr<Statement> Parser::parseAssignStatement(Var &variable) {
+
+    Token tmp;
+    bool bracket;
+    std::unique_ptr<Expression> indexExpr;
     std::unique_ptr<AssignStatement> assignStatement;
     std::unique_ptr<Expression> logicExpr;
 
+    if (accept(TokenType::T_OpenBracket, NOTHROW)) {
+        bracket = true;
+        indexExpr = std::make_unique<OrExpr>(parseOrExpr());
+        accept(TokenType::T_CloseBracket, THROW);
+    }
+
     accept(TokenType::T_Equal, THROW);
-    if (accept(TokenType::T_OpenBracket, NOTHROW)) 
-        logicExpr = std::make_unique<BaseMathExpr>(parseVectorLiteral(), false);
-    else logicExpr = std::make_unique<OrExpr>(parseOrExpr());
+    logicExpr = std::make_unique<OrExpr>(parseOrExpr());
     accept(TokenType::T_Semicolon, THROW);
 
-    assignStatement = std::make_unique<AssignStatement>(variable, std::move(logicExpr));
+    if (bracket)
+        assignStatement = std::make_unique<AssignStatement>(variable,
+                std::move(indexExpr),
+                std::move(logicExpr));
+    else 
+        assignStatement = std::make_unique<AssignStatement>(variable, std::move(logicExpr));
 
     return std::move(assignStatement);
 }
 
-std::unique_ptr<Statement> Parser::parseFunCall() {
-    if (!program.existFunction(current.getString())) {
+std::unique_ptr<Statement> Parser::parseFunCall(std::string name) {
+    if (!program.existFunction(name)) {
         throw std::runtime_error(
-                "Function not found: " + current.getString());
+                "Function not found: " + name);
     }
 
-    FunctionDefinition &functionDef = program.findFunction(current.getString());
+    FunctionDefinition &functionDef = program.findFunction(name);
     auto functionCall = std::make_unique<FunctionCall>(functionDef);
 
     if (!accept(TokenType::T_CloseParen, NOTHROW)) {
@@ -184,15 +208,14 @@ std::unique_ptr<Statement> Parser::parseIfStatement() {
     ifBlock = std::make_unique<BlockStatement>(block);
     parseStmtBlock(*ifBlock);
 
-    if (accept(TokenType::K_Else), NOTHROW) {
+    if (accept(TokenType::K_Else, NOTHROW)) {
         accept(TokenType::T_OpenBrace, THROW);
         elseBlock = std::make_unique<BlockStatement>(block);
         parseStmtBlock(*elseBlock);
     }
 
     return std::make_unique<IfStatement>(std::move(expression),
-                                         std::move(ifBlock),
-                                         std::move(elseBlock));
+                std::move(ifBlock), std::move(elseBlock));
 }
 
 std::unique_ptr<Statement> Parser::parseWhileStatement() {
@@ -214,14 +237,37 @@ std::unique_ptr<Statement> Parser::parseWhileStatement() {
     return std::move(whileStatement);
 }
 
+std::unique_ptr<Statement> Parser::parseAppendStatement() {
+    accept(TokenType::T_OpenParen, THROW);
+    accept(TokenType::I_Identifier, THROW);
+    Var& from = block->findVariable(current.getString());
+
+    accept(TokenType::T_Comma, THROW);
+    accept(TokenType::I_Identifier, THROW);
+    Var& to = block->findVariable(current.getString());
+
+    accept(TokenType::T_CloseParen, THROW);
+    accept(TokenType::T_Semicolon, THROW);
+
+    return std::move(std::make_unique<AppendStatement>(from, to));
+}
+
+std::unique_ptr<Statement> Parser::parseLenStatement() {
+    accept(TokenType::T_OpenParen, THROW);
+    accept(TokenType::I_Identifier, THROW);
+    Var& var = block->findVariable(current.getString());
+
+    accept(TokenType::T_CloseParen, THROW);
+
+    return std::move(std::make_unique<LenStatement>(var));
+}
+
 std::unique_ptr<Expression> Parser::parseOrExpr() {
     std::unique_ptr<OrExpr> logicExpr = std::make_unique<OrExpr>(std::move(parseAndExpr()));
 
     while (accept(TokenType::T_Bar2, NOTHROW)) {
         logicExpr->addOr(std::move(parseAndExpr()));
     }
-
-    //logicExpr->print();
 
     return std::move(logicExpr);
 }
@@ -257,8 +303,6 @@ std::unique_ptr<Expression> Parser::parseRelExpr() {
         default:
             return std::move(relationalExpr);
     }
-
-    
 
     return std::move(relationalExpr);
 }
@@ -308,22 +352,37 @@ std::unique_ptr<Expression> Parser::parseBaseMathExpr() {
     if (accept(TokenType::L_Numeric, NOTHROW)) {
         baseMathExpr = std::make_unique<BaseMathExpr>(new Var(VarType::INT, {current.getInteger()}), unary);
 
+    } else if (accept(TokenType::T_OpenBracket)) {
+        baseMathExpr = std::make_unique<BaseMathExpr>(new Var(parseVectorLiteral()), unary);
+
     } else if (accept(TokenType::T_OpenParen)) {
         baseMathExpr = std::make_unique<BaseMathExpr>(std::move(parseOrExpr()), unary);
         accept(TokenType::T_CloseParen, THROW);
 
+    } else if (accept(TokenType::K_Len)) {
+        baseMathExpr = std::make_unique<BaseMathExpr>(std::move(parseLenStatement()), unary);
+
     } else if (accept(TokenType::I_Identifier)) {
+        Token tk = current;
 
         if (accept(TokenType::T_OpenParen)) {
-            baseMathExpr = std::make_unique<BaseMathExpr>(std::move(parseFunCall()), unary);
+            baseMathExpr = std::make_unique<BaseMathExpr>(std::move(parseFunCall(tk.getString())), unary);
         } else {
             existVariable();
-            if (accept(TokenType::T_OpenBracket, NOTHROW)) {
-                accept(TokenType::L_Numeric, THROW);
-                Token tk = current;
-                accept(TokenType::T_CloseBracket, THROW);
 
-                baseMathExpr = std::make_unique<BaseMathExpr>(block->findVariable(tk.getString()), tk.getInteger(), unary);
+            if (accept(TokenType::T_OpenBracket, NOTHROW)) {
+                std::unique_ptr<Expression> indexExpr;
+                indexExpr = std::make_unique<OrExpr>(parseOrExpr());
+                if (accept(TokenType::T_Colon, NOTHROW)) {
+                std::unique_ptr<Expression> indexExprSlice;
+                indexExprSlice = std::make_unique<OrExpr>(parseOrExpr());
+                    baseMathExpr = std::make_unique<BaseMathExpr>(
+                        block->findVariable(tk.getString()), 
+                        std::move(indexExpr), std::move(indexExprSlice), unary);
+                } else {
+                    baseMathExpr = std::make_unique<BaseMathExpr>(block->findVariable(tk.getString()), std::move(indexExpr), unary);
+                }
+                accept(TokenType::T_CloseBracket, THROW);
             } else {
                 baseMathExpr = std::make_unique<BaseMathExpr>(block->findVariable(current.getString()), unary);
             }
@@ -340,6 +399,7 @@ Var Parser::parseVectorLiteral() {
     if(accept(TokenType::L_Numeric, THROW)) variables.push_back(current.getInteger());
     while(accept(TokenType::T_Comma, NOTHROW)) {
         accept(TokenType::L_Numeric, THROW);
+        variables.push_back(current.getInteger());
     }
     accept(TokenType::T_CloseBracket, THROW);
 
@@ -352,4 +412,8 @@ bool Parser::existVariable() {
                 "Variable not found: " + current.getString());
     }
     return true;
+}
+
+ast::Return Parser::run() {
+    return program.run();
 }

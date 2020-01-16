@@ -5,7 +5,7 @@
 #include "../Var.hpp"
 #include "../../scanner/TokenType.hpp"
 #include "MultiExpr.hpp"
-#include <vector>
+#include <list>
 
 using namespace scanner;
 
@@ -19,28 +19,40 @@ public:
         exprs.push_back(std::move(expr_));
     }
 
+    AddExpr(AddExpr &&rval) 
+        : exprs(std::move(rval.exprs)),
+          addOps(std::move(rval.addOps)) {}
+
     void addPlus(exprPtr expr) {
         exprs.push_back(std::move(expr));
         addOps.push_back(TokenType::T_Plus);
     }
+
     void addMinus(exprPtr expr) {
         exprs.push_back(std::move(expr));
         addOps.push_back(TokenType::T_Minus);
     }
 
-    void print() {
-        std::cout << "\nAddExpr:\n";
-        exprs[0]->print();
-        for (unsigned int i = 0; i < addOps.size(); i++) {
-            exprs[i+1]->print();
-            if (addOps[i] == TokenType::T_Plus) std::cout << " + ";
-            else if (addOps[i] == TokenType::T_Minus) std::cout << " - ";
+    virtual Var calculate() const {
+        auto itExpr = exprs.begin();
+        Var var = itExpr->get()->calculate();
+
+        for (auto &&op : addOps) {
+            ++itExpr;
+            if (op == TokenType::T_Plus)
+                var = var + itExpr->get()->calculate();
+            else if (op == TokenType::T_Minus)
+                var = var - itExpr->get()->calculate();
+            else
+                throw std::runtime_error("Bad TokenType in additiveOps");
         }
+
+        return var;
     }
 
 private:
-    std::vector<exprPtr> exprs;
-    std::vector<TokenType> addOps;
+    std::list<exprPtr> exprs;
+    std::list<TokenType> addOps;
 };
 
 }

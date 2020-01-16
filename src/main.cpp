@@ -10,9 +10,12 @@
 #include "scanner/TokenTypeWrapper.hpp"
 #include "scanner/Scanner.hpp"
 #include "parser/Parser.hpp"
+#include "std/Std.hpp"
+#include "ast/Return.hpp"
 
 using namespace scanner;
 using namespace parser;
+using namespace stdlibrary;
 
 typedef std::vector<Token> t_vec;
 
@@ -23,7 +26,8 @@ void printTokens(t_vec const& tokens) {
 }
 
 int main(int argc, char* argv[]) {
-
+    Parser parser;
+    Std stdlib(parser);
 
     if(argc != 2) {
         BOOST_LOG_TRIVIAL(error) << "Need to pass a path to code file!\n";
@@ -39,14 +43,16 @@ int main(int argc, char* argv[]) {
         BOOST_LOG_TRIVIAL(error) << "Error occured when tried to open given path";
         return -2;
     }
-    Scanner scr(f);
-    Parser parser(&scr);
+    parser.setScr(std::make_unique<Scanner>(f));
     try {
         parser.parse();
     } catch (std::exception &e) {
         std::cout << e.what() << std::endl;
     }
     f.close();
+
+    ast::Return ret = parser.run();
+    std::cout << ret.variable << std::endl;
 
     return 0;
 }

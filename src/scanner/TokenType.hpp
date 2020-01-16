@@ -17,6 +17,8 @@ enum class TokenType {
     K_Else,         // else
     K_While,        // while
     K_Var,          // var
+    K_Append,       // append()
+    K_Len,          // len()
     T_OpenBrace,    // {
     T_CloseBrace,   // }
     T_OpenParen,    // (

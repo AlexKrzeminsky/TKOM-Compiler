@@ -1,10 +1,8 @@
 fun main() {
-    var int = 1;
-    if ( int > 1 ) {
-        int = 2;
-        while(int <= 3) {
-            int = ;
-        }
-    }
-    return int;
+    var list = [1,2,3];
+    var lista = [5,33,1,6,4,3];
+    var length = sort(filter(lista, 4, 1));
+    var i = 3;
+
+    return length;
 }

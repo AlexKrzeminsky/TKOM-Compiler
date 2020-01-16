@@ -2,7 +2,7 @@
 #define AST_FUNCTIONDEFSTATEMENT_HPP_
 
 #include <string>
-#include <vector>
+#include <list>
 #include "../Var.hpp"
 #include "../VarType.hpp"
 #include "BlockStatement.hpp"
@@ -26,9 +26,22 @@ public:
 
     unsigned size() { return vars.size(); }
 
+    Return run(std::list<Var> var = std::list<Var>()) {
+        auto itParameters = vars.begin();
+        auto itVar = var.begin();
+
+        for (; itVar != var.end(); ++itVar, ++itParameters) {
+            block.findVariable(*itParameters) = *itVar;
+        }
+
+        Return ret = block.run();
+
+        return ret;
+    };
+
 private:
     std::string id;
-    std::vector<std::string> vars;
+    std::list<std::string> vars;
     BlockStatement block;
 };
 

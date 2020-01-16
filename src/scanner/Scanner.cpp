@@ -191,6 +191,6 @@ Token Scanner::scan() {
                     std::to_string(line) + ":" + std::to_string(pos)
                     + " - Unknown Token: '" + tokenValue + "'\n");
     else { tokens.push_back(tk); token = tk; }
-    std::cout << TokenTypeWrapper::typeToString(tk.getType()) << std::endl;
+    //std::cout << TokenTypeWrapper::typeToString(tk.getType()) << std::endl;
     return tk;
 }

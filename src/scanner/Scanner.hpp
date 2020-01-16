@@ -42,7 +42,11 @@ public:
     bool fail;
 
     bool scanFail;
+    int pos;
+    int line;
 
+    int callPos;
+    int callLine;
 private: 
     inline void move() {
         pos++;
@@ -52,10 +56,6 @@ private:
 
     Reader* text;
 
-    int callPos;
-    int callLine;
-    int pos;
-    int line;
     char ch;
 
     Token token;
